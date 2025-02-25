@@ -131,21 +131,34 @@ server.get("/expenses/:id", async(req, res)=>{
 
 server.put("/expenses/:id", async(req, res) => {
   try {
-    const {id} = req.params;
-    const {description, amount, date} = req.body;
-  
     const conn = await getDBconnection();
-    const updateExpense = "UPDATE expenses SET description = ?, amount = ?, date = ? WHERE id_expense = ?";
+    const {id} = req.params;
+    const {description, amount, date, category} = req.body;
+
+    let categoryId;
+    const sqlCheckCategory = "SELECT id_category FROM categories WHERE category = ?";
+    const [existingCategory] = await conn.query(sqlCheckCategory, [category]);
+
+    if (existingCategory.length > 0) {
+      categoryId = existingCategory[0].id_category;
+    } else {
+      const sqlInsertCategory = `INSERT INTO categories (category) VALUES (?)`;
+      const [categoryResult] = await conn.query(sqlInsertCategory, [category]);
+      categoryId = categoryResult.insertId;
+    }
+  
     
-    const [result] = await conn.query(updateExpense, [description, amount, date, id]);
+    const updateExpense = "UPDATE expenses SET description = ?, amount = ?, date = ?, fk_category = ? WHERE id_expense = ?";
+    
+    const [result] = await conn.query(updateExpense, [description, amount, date, categoryId, id]);
   
     if(result.affectedRows > 0) {
-      res.status(201).json({"success": true,});
+      res.status(200).json({"success": true, message: "Expense updated"});
     }else {
       res.status(400).json(
         {
           success: false,
-          message: "An error occurred"
+          message: "No expense found to update"
        });
   
     }
