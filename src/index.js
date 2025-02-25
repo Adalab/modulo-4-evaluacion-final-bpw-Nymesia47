@@ -129,3 +129,22 @@ server.put("/expenses/:id", async(req, res) => {
 
   }
 });
+
+//Eliminar una entrada existente.
+
+server.delete("/expenses/:id", async (req, res) => {
+  const {id} = req.params;
+  const conn = await getDBconnection();
+  const sqlDelete = "DELETE FROM expenses WHERE id_expense = ? ";
+  const [result] = await conn.query(sqlDelete, [id]);
+  if(result.affectedRows > 0) {
+    res.status(201).json({"success": true,});
+  }else {
+    res.status(400).json(
+      {
+        success: false,
+        message: "an error occurred on deleting"
+     });
+
+  }
+})
