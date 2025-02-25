@@ -40,27 +40,39 @@ Defina las rutas para las siguientes operaciones y escriba los endpoints corresp
 
 //Insertar un expense en la tabla expenses
 
-server.post("/expenses", async (requestAnimationFrame, res) => {
+server.post("/expenses", async (req, res) => {
   try {
     const conn = await getDBconnection();
-    const {description, amount, date} = requestAnimationFrame.body;
-    const sqlInsert = "INSERT INTO expenses (description, amount, date) values (?, ?, ?)";
-    const [result] = await conn.query(sqlInsert, [
+    const {description, amount, date, category} = req.body;
+
+    let categoryId;
+    const sqlCheckCategory = "SELECT id_category FROM categories WHERE category = ?";
+    const [existingCategory] = await conn.query(sqlCheckCategory, [category]);
+
+    if (existingCategory.length > 0) {
+      categoryId = existingCategory[0].id_category;
+    } else {
+      const sqlInsertCategory = `INSERT INTO categories (category) VALUES (?)`;
+      const [categoryResult] = await conn.query(sqlInsertCategory, [category]);
+      categoryId = categoryResult.insertId;
+    }
+
+    const sqlInsertExpense = "INSERT INTO expenses (description, amount, date, fk_category) values (?, ?, ?, ?)";
+    const [result] = await conn.query(sqlInsertExpense, [
       description,
       amount,
-      date
+      date,
+      categoryId
     ]);
 
-    if (result) {
+    if (result.affectedRows > 0) {
       res.status(201).json({
         "success": true,
         "expense_id": result.insertId
       });
     } else {
-      res.status(400).json({
-        "success": false,
-        "expense_id": "Failed to insert"
-      });
+      console.error("Error inserting expense:", error);
+      res.status(500).json({ success: false, error: error.message });
     }
     
   } catch (error) {
@@ -73,7 +85,11 @@ server.post("/expenses", async (requestAnimationFrame, res) => {
 server.get("/expenses", async(req, res) => {
   try {
     const conn = await getDBconnection();
-    const select = "SELECT * FROM expenses";
+    const select = `
+    SELECT expenses.id_expense, expenses.description, expenses.amount, expenses.date, categories.category
+    FROM expenses INNER JOIN categories
+    ON expenses.fk_category = categories.id_category
+    `;
     const [result] = await conn.query(select);
     conn.end();
 
@@ -95,7 +111,11 @@ server.get("/expenses/:id", async(req, res)=>{
   try{
     const conn = await getDBconnection();
     const {id} = req.params;
-    const selectId = "SELECT * FROM expenses WHERE id_expense = ? ";
+    const selectId = `
+    SELECT expenses.id_expense, expenses.description, expenses.amount, expenses.date, categories.category
+    FROM expenses INNER JOIN categories
+    ON expenses.fk_category = categories.id_category
+    WHERE id_expense = ?; `;
 
     const [result] = await conn.query(selectId, [id]);
     conn.end();
@@ -110,41 +130,53 @@ server.get("/expenses/:id", async(req, res)=>{
 //Actualizar una entrada existente.
 
 server.put("/expenses/:id", async(req, res) => {
-  const {id} = req.params;
-  const {description, amount, date} = req.body;
-
-  const conn = await getDBconnection();
-  const updateExpense = "UPDATE expenses SET description = ?, amount = ?, date = ? WHERE id_expense = ?";
+  try {
+    const {id} = req.params;
+    const {description, amount, date} = req.body;
   
-  const [result] = await conn.query(updateExpense, [description, amount, date, id]);
-
-  if(result.affectedRows > 0) {
-    res.status(201).json({"success": true,});
-  }else {
-    res.status(400).json(
-      {
-        success: false,
-        message: "An error occurred"
-     });
-
+    const conn = await getDBconnection();
+    const updateExpense = "UPDATE expenses SET description = ?, amount = ?, date = ? WHERE id_expense = ?";
+    
+    const [result] = await conn.query(updateExpense, [description, amount, date, id]);
+  
+    if(result.affectedRows > 0) {
+      res.status(201).json({"success": true,});
+    }else {
+      res.status(400).json(
+        {
+          success: false,
+          message: "An error occurred"
+       });
+  
+    }
+    
+  } catch (error) {
+    res.status(500).json(error) 
   }
+
 });
 
 //Eliminar una entrada existente.
 
 server.delete("/expenses/:id", async (req, res) => {
-  const {id} = req.params;
-  const conn = await getDBconnection();
-  const sqlDelete = "DELETE FROM expenses WHERE id_expense = ? ";
-  const [result] = await conn.query(sqlDelete, [id]);
-  if(result.affectedRows > 0) {
-    res.status(201).json({"success": true,});
-  }else {
-    res.status(400).json(
-      {
-        success: false,
-        message: "an error occurred on deleting"
-     });
-
+  try {
+    const {id} = req.params;
+    const conn = await getDBconnection();
+    const sqlDelete = "DELETE FROM expenses WHERE id_expense = ? ";
+    const [result] = await conn.query(sqlDelete, [id]);
+    if(result.affectedRows > 0) {
+      res.status(201).json({"success": true,});
+    }else {
+      res.status(400).json(
+        {
+          success: false,
+          message: "an error occurred on deleting"
+       });
+  
+    }
+    
+  } catch (error) {
+    res.status(500).json(error)   
   }
+
 })
