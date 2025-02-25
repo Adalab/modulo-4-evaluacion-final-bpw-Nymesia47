@@ -66,7 +66,7 @@ server.post("/expenses", async (requestAnimationFrame, res) => {
   } catch (error) {
     res.status(500).json(error) 
   }
-})
+});
 
 //Listar todas las expenses existentes
 
@@ -83,9 +83,49 @@ server.get("/expenses", async(req, res) => {
         result: result
       }
     )
-
     
   } catch (error) {
     res.status(500).json(error)  
   }
-})
+});
+
+//Obtener un expense por su ID
+
+server.get("/expenses/:id", async(req, res)=>{
+  try{
+    const conn = await getDBconnection();
+    const {id} = req.params;
+    const selectId = "SELECT * FROM expenses WHERE id_expense = ? ";
+
+    const [result] = await conn.query(selectId, [id]);
+    conn.end();
+
+    res.status(200).json(result[0]);
+
+  } catch (error) {
+    res.status(500).json(error)
+  }
+});
+
+//Actualizar una entrada existente.
+
+server.put("/expenses/:id", async(req, res) => {
+  const {id} = req.params;
+  const {description, amount, date} = req.body;
+
+  const conn = await getDBconnection();
+  const updateExpense = "UPDATE expenses SET description = ?, amount = ?, date = ? WHERE id_expense = ?";
+  
+  const [result] = await conn.query(updateExpense, [description, amount, date, id]);
+
+  if(result.affectedRows > 0) {
+    res.status(201).json({"success": true,});
+  }else {
+    res.status(400).json(
+      {
+        success: false,
+        message: "An error occurred"
+     });
+
+  }
+});
