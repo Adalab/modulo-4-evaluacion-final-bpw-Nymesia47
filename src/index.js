@@ -2,6 +2,8 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require("mysql2/promise");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 //crear el servidor
 const server = express();
@@ -10,6 +12,7 @@ require("dotenv").config();
 // configurar el servidor
 server.use(cors());
 server.use(express.json());
+server.set('view engine', 'ejs');
 
 //funcion para conectarse a la BD
 async function getDBconnection() {
@@ -193,3 +196,30 @@ server.delete("/expenses/:id", async (req, res) => {
   }
 
 })
+
+//Bonus
+
+//Registrar usuario
+server.post("/register", async (req, res) => {
+  try {
+    const conn = await getDBconnection();
+    const {nombre, email, pass} = req.body;
+    const selectEmail = "SELECT email FROM usuarios_DB WHERE email = ?";
+    const [emailResult] = await conn.query(selectEmail, [email]);
+
+    if(emailResult.length === 0) {
+      const passwordHashed =  await bcrypt.hash(pass, 10);
+    
+      const insertUser = "INSERT INTO usuarios_DB (nombre, email, password) values (?, ?, ?)";
+      const [result] = await conn.query(insertUser, [nombre, email, passwordHashed]);
+      res.status(201).json({success: true, id: result.insertId});
+    
+    } else {
+      res.status(400).json({success: false, message: "User already exists"});
+    }
+    
+  } catch (error) {
+    res.status(500).json(error)
+  } 
+
+});
