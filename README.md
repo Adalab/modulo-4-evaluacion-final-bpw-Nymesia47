@@ -20,7 +20,7 @@ Final project of the Adalab bootcamp, fourth module. The goalwas to create a RES
  | GET    | /expenses/:id  | Get an expense from id        |
  | PUT    | /expenses/:id  | Update an existing expense    |
  | DELETE | /expenses/:id  | Delete an expense             |
- | GET    | //exp/user     | Get all expenses per user     |
+ | GET    | /exp/user     | Get all expenses per user     |
 
  ### Authentication (Bonus)
 
