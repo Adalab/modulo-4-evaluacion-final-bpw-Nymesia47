@@ -41,11 +41,32 @@ Defina las rutas para las siguientes operaciones y escriba los endpoints corresp
 
 //Endpoints
 
+//funcion the authenticazion
+const authToken = (req, res, next) => {
+  const tokenString = req.headers.authorization;
+  console.log(tokenString);
+
+  if (!tokenString) {
+    {res.status(400).json({success:false, message:"Access denied"});}
+  } else {
+    try {
+      const token = tokenString.split(" ")[1];
+      const verifyToken = jwt.verify(token, "pepino");
+      req.data = verifyToken; 
+      console.log(verifyToken);
+    } catch (error) {
+      res.status(400).json({success: false, message: error});
+    }
+    next();
+  };
+};
+
 //Insertar un expense en la tabla expenses
 
-server.post("/expenses", async (req, res) => {
+server.post("/expenses", authToken, async (req, res) => {
   try {
     const conn = await getDBconnection();
+    const userId = req.data.id;
     const {description, amount, date, category} = req.body;
 
     let categoryId;
@@ -60,12 +81,13 @@ server.post("/expenses", async (req, res) => {
       categoryId = categoryResult.insertId;
     }
 
-    const sqlInsertExpense = "INSERT INTO expenses (description, amount, date, fk_category) values (?, ?, ?, ?)";
+    const sqlInsertExpense = "INSERT INTO expenses (description, amount, date, fk_category, fk_usuario) values (?, ?, ?, ?, ?)";
     const [result] = await conn.query(sqlInsertExpense, [
       description,
       amount,
       date,
-      categoryId
+      categoryId,
+      userId
     ]);
 
     if (result.affectedRows > 0) {
@@ -107,6 +129,7 @@ server.get("/expenses", async(req, res) => {
     res.status(500).json(error)  
   }
 });
+
 
 //Obtener un expense por su ID
 
@@ -258,28 +281,8 @@ server.post("/login", async(req, res) => {
 });
 
 
-
-const authToken = (req, res, next) => {
-  const tokenString = req.headers.authorization;
-  console.log(tokenString);
-
-  if (!tokenString) {
-    {res.status(400).json({success:false, message:"Access denied"});}
-  } else {
-    try {
-      const token = tokenString.split(" ")[1];
-      const verifyToken = jwt.verify(token, "pepino");
-      req.data = verifyToken; 
-      console.log(verifyToken);
-    } catch (error) {
-      res.status(400).json({success: false, message: error});
-    }
-    next();
-  };
-};
-
 //Listar todas las expenses existentes de un usuario
-server.get("/exp/usuario", authToken, async(req, res) => {
+server.get("/exp/user", authToken, async(req, res) => {
   try {
     const conn = await getDBconnection();
     const userId = req.data.id;
