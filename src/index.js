@@ -256,3 +256,52 @@ server.post("/login", async(req, res) => {
     res.status(500).json(error)  
   }
 });
+
+
+
+const authToken = (req, res, next) => {
+  const tokenString = req.headers.authorization;
+  console.log(tokenString);
+
+  if (!tokenString) {
+    {res.status(400).json({success:false, message:"Access denied"});}
+  } else {
+    try {
+      const token = tokenString.split(" ")[1];
+      const verifyToken = jwt.verify(token, "pepino");
+      req.data = verifyToken; 
+      console.log(verifyToken);
+    } catch (error) {
+      res.status(400).json({success: false, message: error});
+    }
+    next();
+  };
+};
+
+//Listar todas las expenses existentes de un usuario
+server.get("/exp/usuario", authToken, async(req, res) => {
+  try {
+    const conn = await getDBconnection();
+    const userId = req.data.id;
+    console.log(userId)
+    const select = `
+    SELECT expenses.id_expense, expenses.description, expenses.amount, expenses.date, categories.category
+    FROM expenses INNER JOIN categories
+    ON expenses.fk_category = categories.id_category
+    WHERE expenses.fk_usuario = ?
+    `;
+    const [result] = await conn.query(select, [userId]);
+    conn.end();
+    console.log(result);
+
+    res.status(200).json(
+      {
+        info: {count: result.length},
+        result: result
+      }
+    )
+    
+  } catch (error) {
+    res.status(500).json(error)  
+  }
+});
