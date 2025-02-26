@@ -200,20 +200,20 @@ server.delete("/expenses/:id", async (req, res) => {
 //Bonus
 
 //Registrar usuario
+
 server.post("/register", async (req, res) => {
   try {
     const conn = await getDBconnection();
     const {nombre, email, password} = req.body;
     const selectEmail = "SELECT email FROM usuarios_DB WHERE email = ?";
     const [emailResult] = await conn.query(selectEmail, [email]);
-    console.log(req.body);
 
     if(emailResult.length === 0) {
       const passwordHashed =  await bcrypt.hash(password, 10);
     
       const insertUser = "INSERT INTO usuarios_DB (nombre, email, password) values (?, ?, ?)";
       const [result] = await conn.query(insertUser, [nombre, email, passwordHashed]);
-      res.status(201).json({success: true, id: result.insertId});
+      res.status(201).json({success: true, id: result.insertId, token: passwordHashed});
     
     } else {
       res.status(400).json({success: false, message: "User already exists"});
@@ -225,4 +225,34 @@ server.post("/register", async (req, res) => {
     
   } 
 
+});
+
+//Login de un usuario
+
+server.post("/login", async(req, res) => {
+  try {
+    const conn = await getDBconnection();
+    const {email, password} = req.body;
+    const selectUser = "SELECT * FROM usuarios_DB WHERE email = ?";
+    const [userResult] = await conn.query(selectUser, [email]);
+
+    if(userResult.length !== 0) {
+      const user = userResult[0];
+      const isSamePassword = await bcrypt.compare(password, user.password);
+
+      if(isSamePassword){
+        const infoToken = {email: user.email, id: user.id}
+        const token = jwt.sign(infoToken, "pepino", {expiresIn: "1h"});
+        res.status(201).json({success: true, token});
+      } else {
+        res.status(400).json({success: false, message: "incorrect password"});
+      }
+    } else {
+      res.status(400).json({success: false, message: "incorrect email"});
+    }
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error)  
+  }
 });
