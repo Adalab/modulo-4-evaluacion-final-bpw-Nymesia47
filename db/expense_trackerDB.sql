@@ -69,7 +69,7 @@ CREATE TABLE `expenses` (
 
 LOCK TABLES `expenses` WRITE;
 /*!40000 ALTER TABLE `expenses` DISABLE KEYS */;
-INSERT INTO `expenses` VALUES (1,'dress for Nora\'s wedding',120,'2025-01-15',9,2),(2,'New Phone',628,'2025-01-23',13,2),(3,'Gas',25,'2025-01-15',7,3),(4,'Cat Food',15.5,'2025-01-16',2,3),(5,'SPA',60,'2025-02-10',5,3),(6,'movie tickets',42.5,'2025-02-18',4,2),(8,'CC payment',66.35,'2025-02-02',11,3),(9,'Flight Tickets to Italy',199,'2025-02-07',10,2),(11,'Babysitter',80,'2025-02-10',12,2),(12,'Dental Cleaning',70,'2025-02-22',5,2),(13,'Haircut',40,'2025-02-25',14,2);
+INSERT INTO `expenses` VALUES (1,'dress for Noras wedding',120,'2025-01-15',9,2),(2,'New Phone',628,'2025-01-23',13,2),(3,'Gas',25,'2025-01-15',7,3),(4,'Cat Food',15.5,'2025-01-16',2,3),(5,'SPA',60,'2025-02-10',5,3),(6,'movie tickets',42.5,'2025-02-18',4,2),(8,'CC payment',66.35,'2025-02-02',11,3),(9,'Flight Tickets to Italy',199,'2025-02-07',10,2),(11,'Babysitter',80,'2025-02-10',12,2),(12,'Dental Cleaning',70,'2025-02-22',5,2),(13,'Haircut',40,'2025-02-25',14,2);
 /*!40000 ALTER TABLE `expenses` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -118,4 +118,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-02-26 11:53:49
+-- Dump completed on 2025-02-26 13:00:27
