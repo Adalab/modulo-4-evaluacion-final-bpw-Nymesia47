@@ -203,12 +203,13 @@ server.delete("/expenses/:id", async (req, res) => {
 server.post("/register", async (req, res) => {
   try {
     const conn = await getDBconnection();
-    const {nombre, email, pass} = req.body;
+    const {nombre, email, password} = req.body;
     const selectEmail = "SELECT email FROM usuarios_DB WHERE email = ?";
     const [emailResult] = await conn.query(selectEmail, [email]);
+    console.log(req.body);
 
     if(emailResult.length === 0) {
-      const passwordHashed =  await bcrypt.hash(pass, 10);
+      const passwordHashed =  await bcrypt.hash(password, 10);
     
       const insertUser = "INSERT INTO usuarios_DB (nombre, email, password) values (?, ?, ?)";
       const [result] = await conn.query(insertUser, [nombre, email, passwordHashed]);
@@ -219,7 +220,9 @@ server.post("/register", async (req, res) => {
     }
     
   } catch (error) {
+    console.log(error);
     res.status(500).json(error)
+    
   } 
 
 });
