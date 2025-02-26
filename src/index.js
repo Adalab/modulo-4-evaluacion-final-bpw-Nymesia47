@@ -89,6 +89,7 @@ server.post("/expenses", authToken, async (req, res) => {
       categoryId,
       userId
     ]);
+    conn.end();
 
     if (result.affectedRows > 0) {
       res.status(201).json({
@@ -177,6 +178,7 @@ server.put("/expenses/:id", async(req, res) => {
     const updateExpense = "UPDATE expenses SET description = ?, amount = ?, date = ?, fk_category = ? WHERE id_expense = ?";
     
     const [result] = await conn.query(updateExpense, [description, amount, date, categoryId, id]);
+    conn.end();
   
     if(result.affectedRows > 0) {
       res.status(200).json({"success": true, message: "Expense updated"});
@@ -203,6 +205,7 @@ server.delete("/expenses/:id", async (req, res) => {
     const conn = await getDBconnection();
     const sqlDelete = "DELETE FROM expenses WHERE id_expense = ? ";
     const [result] = await conn.query(sqlDelete, [id]);
+    conn.end();
     if(result.affectedRows > 0) {
       res.status(201).json({"success": true,});
     }else {
@@ -241,6 +244,7 @@ server.post("/register", async (req, res) => {
     } else {
       res.status(400).json({success: false, message: "User already exists"});
     }
+    conn.end();
     
   } catch (error) {
     console.log(error);
